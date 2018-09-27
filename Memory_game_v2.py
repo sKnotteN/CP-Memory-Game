@@ -124,7 +124,7 @@ class Mainmenu:
         for widget in frame.winfo_children():
             widget.destroy()
 
-    
+    # Send all infoen til game scriptet (Memory_Game_Server_Game_core
     def send_info(self):
         self.game_gui = Memory_Game_Server_Game_Core.GUI(self.card_amount, self.game)
         self.player1 = Memory_Game_Server_Game_Core.Player(self.name1, 1, self.game_gui, self.game)
