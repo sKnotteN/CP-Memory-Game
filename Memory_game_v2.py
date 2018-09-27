@@ -4,35 +4,42 @@ Student ID: 8284
 E-mail: ksknotten@outlook.com
 """
 
+# Hent dei andre python scripta
 import Memory_Game_Server_Game_Core
+import Memory_Game_Networking as Networking
+
+# Importer offisielle libs
 from tkinter import *
 from tkinter import messagebox
-
-import Memory_Game_Networking as Networking
 import threading
-from time import sleep
 
+
+# Lag ein root vindauge for houvd menyen
 menu_root = Tk()
 menu_root.geometry('400x400')
 
 
+# Ein klasse for main menu som er hovud menyen der du velger og setter alle innstillinger. Bestemmer over lokalt spel
 class Mainmenu:
     def __init__(self):
+        # Set variablar som ein enkelt kan endre på igjennom heile classen
         self.game = Memory_Game_Server_Game_Core.Game()
         self.game_gui = None
         self.network_menu = None
         self.name1, self.name2, self.card_amount = '', '', ''
         self.name1_entry, self.name2_entry, self.card_amount_entry = None, None, None
 
+        # Lag frames som skal innehalde forskjellig informasjon. f_user_input skal vere til player input
         self.f_information = Frame(menu_root)
         self.f_information.pack(fill=None, expand=False)
         self.f_user_input = Frame(menu_root)
         self.f_user_input.place(relx=.5, rely=.5, anchor="c")
         self.game_title_frame, self.game_info_frame = self.information_frame()
 
-        # self.game_player1_name, self.game_player2_name, self.game_card_amount = None, None, None
-        self.game_mode_menu = self.user_input_frame()
+        # Start og lag vindauget
+        self.user_input_frame()
 
+    # Setter inn informasjonen som skal vere i informasjons framen, Informasjon om spelet og titel på spelet
     def information_frame(self):
         title = Label(self.f_information, width=20, text='Game title')
         title.pack()
@@ -40,12 +47,13 @@ class Mainmenu:
         info.pack()
         return title, info
 
+    # Gjer klar user_input framen som skal innehalde widget som skal samle inn informasjon om spelarane
     def user_input_frame(self, command=None):
-
+        # Sjekk om funksjonen he fått tilsendt kommandoen 'name'. Vist 'name' så fjern alt i framen og legg til nytt.
         if command == 'name':
             self.clear_frame(self.f_user_input)
             return self.create_input_widgets(self.f_user_input)
-
+        # Lag til hovud menyen der en velger mellom lokal eller nettverk. Quit er og her.
         else:
             local = Button(self.f_user_input, text='Local play', command=self.local_play)
             local.grid(column=0, row=0, pady=10)
@@ -54,7 +62,9 @@ class Mainmenu:
             b_quit = Button(self.f_user_input, text='Quit Game', command=quit)
             b_quit.grid(row=2, pady=20)
 
+    # Lag til user_input framen med options for spelet.
     def create_input_widgets(self, frame):
+        # Lag ei liste med dei mulige størrelsane på spelet
         text1 = Label(frame, text='Amount of cards: ')
         text1.grid(column=0, row=2)
         card_amount = Listbox(frame, selectmode=EXTENDED, height=4)
@@ -65,6 +75,7 @@ class Mainmenu:
         card_amount.select_set(0)
         card_amount.grid(column=1, row=2)
 
+        # Lag ein start knapp, tilbake knapp og ein quit knapp
         b_back = Button(frame, text='Back', command=self.back_button)
         b_back.grid(column=0, row=3, pady=20)
         b_play = Button(frame, text='Start Game', command=self.start_button)
@@ -72,42 +83,48 @@ class Mainmenu:
         b_quit = Button(frame, text='Quit Game', command=quit)
         b_quit.grid(columnspan=2, row=4)
 
+        # Lag til for at spelaren skal kunne legge inn namn til spelar 1 og spelar 2.
         text1 = Label(frame, text='Player name: ')
         text1.grid(column=0, row=0)
         name = Entry(frame)
         name.grid(pady=5, padx=15, column=1, row=0)
-
         text2 = Label(frame, text='Player 2 name: ')
         text2.grid(column=0, row=1)
         name2 = Entry(frame)
         name2.grid(pady=5, column=1, row=1)
 
+        # Send tilbake alle entry widgets som trengst.
         return name, name2, card_amount
 
-
+    # Når back knappen blir trykt; fjern alt frå framen og lag nytt. Tøm og variablar.
     def back_button(self):
         self.clear_frame(self.f_user_input)
         self.user_input_frame()
         self.name1_entry, self.name2_entry, self.card_amount_entry = None, None, None
         self.name1, self.name2, self.card_amount = '', '', ''
 
+    # Når start knappen blir trykt; sjekk kva input brukaren har gitt og send det vidare til spelet.
     def start_button(self):
         self.card_amount = self.card_amount_entry.get(ACTIVE)
         self.name1 = self.name1_entry.get()
         self.name2 = self.name2_entry.get()
         self.send_info()
 
+    # Når network knappen blir trykt; Lag ein ny class for nettverk speling or clear framen. Sjekk NetworkMenu class.
     def network_play(self):
         self.clear_frame(self.f_user_input)
         self.network_menu = NetworkMenu(self, self.game)
 
+    # Når local play knappen blir trykt; Lag til user_input framen med muligheite til go skrive inn namn og størrelse.
     def local_play(self):
         self.name1_entry, self.name2_entry, self.card_amount_entry = self.user_input_frame('name')
 
+    # Tar i mot ein frame og fjerner alle widgets som er inn i.
     def clear_frame(self, frame):
         for widget in frame.winfo_children():
             widget.destroy()
 
+    
     def send_info(self):
         self.game_gui = Memory_Game_Server_Game_Core.GUI(self.card_amount, self.game)
         self.player1 = Memory_Game_Server_Game_Core.Player(self.name1, 1, self.game_gui, self.game)
@@ -133,6 +150,8 @@ class NetworkMenu(Mainmenu):
         self.win = None
         self.t = None
         self.s_ip = ''
+        self.player1, self.player2 = None, None
+        self.name_input, self.ip_input = '', ''
 
         self.make_window()
 
@@ -176,12 +195,11 @@ class NetworkMenu(Mainmenu):
         except AttributeError:
             pass
 
-
     def server_info(self):
-        self.message('Name: ', 'Your name', self.close_message, 'Connect')
+        self.message2('Name: ', 'Your name', self.close_message, 'Connect')
 
     def waiting_for_client(self):
-        self.message('Waiting for client ..', 'Hosting server', self.close_message, 'Close', True)
+        self.message2('Name:', 'Host a server', self.close_message_server_host, 'Start server', True)
 
     def thread_networking_server(self):
         threading.Thread(target=self.host_game).start()
@@ -191,8 +209,8 @@ class NetworkMenu(Mainmenu):
 
     def host_game(self):
         self.player1, self.player2 = None, None
-        self.card_amount = self.card_amount_entry.get(ACTIVE)
-        self.name = self.name_entry.get()
+        # self.card_amount = self.card_amount_entry.get(ACTIVE)
+        # self.name = self.name_entry.get()
         self.network = Networking.Server('127.0.0.1', 5000)
         if self.network.look() == 'Connected':
             data = self.network.receive()
@@ -205,6 +223,7 @@ class NetworkMenu(Mainmenu):
     def find_server(self):
         self.network = Networking.Client(self.s_ip, 5000)
         self.network.look()
+        self.network.send('name: ' + str(self.name))
         answer = self.network.receive()
         if answer == 'No server found':
             messagebox.showinfo('No server found', 'Was not able to find a server')
@@ -215,38 +234,48 @@ class NetworkMenu(Mainmenu):
             threading.Thread(target=self.thread_client_start_game).start()
             menu_root.destroy()
 
-    def message(self, msg, title, button_event, button_text, no_input=False):
+    def message2(self, msg, title, button_event, button_text, host_server=False):
         self.win = Toplevel()
-        self.win.wm_geometry('230x130')
+        self.win.wm_geometry('230x150')
         self.win.title(title)
 
-        if no_input:
-            Label(self.win, text=msg, anchor="c").pack(pady=18)
-            Button(self.win, text=button_text, command=button_event).pack(pady=8)
-            self.thread_networking_server()
+        if host_server:
+            Label(self.win, text=msg).grid(column=0, row=0, pady=8, padx=20)
+            self.name_input = Entry(self.win)
+            self.name_input.grid(column=1, row=0)
+            text1 = Label(self.win, text='Amount of cards: ')
+            text1.grid(column=0, row=1)
+            self.card_amount_entry = Listbox(self.win, selectmode=EXTENDED, height=4)
+            self.card_amount_entry.insert(1, '3x4')
+            self.card_amount_entry.insert(2, '5x6')
+            self.card_amount_entry.insert(3, '8x8')
+            self.card_amount_entry.insert(4, '10x10')
+            self.card_amount_entry.select_set(0)
+            self.card_amount_entry.grid(column=1, row=1)
+            Button(self.win, text=button_text, command=button_event).grid(columnspan=2, row=2, pady=14)
         else:
-            Label(self.win, text=msg, anchor="c").grid(column=0, row=0, pady=8, padx=20)
+            Label(self.win, text=msg).grid(column=0, row=0, pady=8, padx=20)
             self.name_input = Entry(self.win)
             self.name_input.grid(column=1, row=0)
             Label(self.win, text='Server IP:').grid(column=0, row=1, pady=8)
             self.ip_input = Entry(self.win)
             self.ip_input.grid(column=1, row=1)
-            Button(self.win, text=button_text, command=button_event).grid(columnspan=2, column=0, row=2, pady=14)
+            Button(self.win, text=button_text, command=button_event).grid(columnspan=2, row=2, pady=14)
+            # Button(self.win, text='Back', command=self.close_message_noinput).grid(column=1, row=2, pady=14)
+
+    def close_message_server_host(self):
+        self.name = self.name_input.get()
+        self.card_amount = self.card_amount_entry.get(ACTIVE)
+        print(self.card_amount_entry)
+        self.win.destroy()
+        self.thread_networking_server()
 
     def close_message(self):
-
-        try:
-            self.name = self.name_input.get()
-            self.s_ip = self.ip_input.get()
-            self.thread_networking_client()
-            self.network.send('name: ' + str(self.name))
-        except AttributeError:
-            return
+        self.name = self.name_input.get()
+        self.s_ip = self.ip_input.get()
         self.win.destroy()
-        try:
-            self.network.close()
-        except AttributeError:
-            return
+        # self.thread_networking_client()
+        self.find_server()
 
     def server_start_game(self):
         if self.name == '' or self.name == ' ':

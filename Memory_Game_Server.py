@@ -36,16 +36,19 @@ def wait_for_connection():
 
 
 def send_message(message):
+    print('server trying to send message')
     msg = pickle.dumps(message)
     while True:
         try:
             connection.sendall(msg)
+            print('server sent this message: ', message)
             break
         except OSError:
             print('No server to send message to')
 
 
 def receive():
+    print('server waiting for data')
     while True:
         try:
             data = connection.recv(1024)

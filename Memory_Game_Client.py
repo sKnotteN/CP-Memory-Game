@@ -25,16 +25,19 @@ def set_info(server_ip, port):
 
 # Try to send and receive a message
 def send_message(message):
+    print('server trying to send message')
     msg = pickle.dumps(message)
     while True:
         try:
             s.sendall(msg)
+            print('client sent this message: ', message)
             break
         except OSError:
             break
 
 
 def receive():
+    print('client waiting for data')
     while True:
         try:
             data = s.recv(1024)

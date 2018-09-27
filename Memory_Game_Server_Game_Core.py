@@ -234,6 +234,9 @@ class Game:
             else:
                 self.server_gui.reset_board()
             self.player_choose()
+            if not self.network and self.server_gui.cards == {}:
+                self.check_win()
+                return
             self.pick = 0
             self.switch_player_turn()
             if self.network:
@@ -263,13 +266,10 @@ class Game:
             if self.client_gui:
                 self.client_gui.card_taken(self.current_choice[1], self.last_choice[1])
                 self.client_gui.update_score()
-                if self.client_gui.cards == {}:
-                    self.check_win()
+
             else:
                 self.server_gui.card_taken(self.current_choice[1], self.last_choice[1])
                 self.server_gui.update_score()
-                if self.server_gui.cards == {}:
-                    self.check_win()
 
         if not self.network:
             self.current_choice, self.last_choice = None, None
@@ -277,11 +277,17 @@ class Game:
     def send_updates(self):
         if self.client_gui:
             self.network.send([self.current_choice, self.last_choice])
+            if self.client_gui.cards == {}:
+                self.check_win()
+                return
             self.current_choice, self.last_choice = self.network.receive()
             self.receive_update()
 
         elif self.server_gui:
             self.network.send([self.current_choice, self.last_choice])
+            if self.server_gui.cards == {}:
+                self.check_win()
+                return
             self.current_choice, self.last_choice = self.network.receive()
             self.receive_update()
 
@@ -291,10 +297,24 @@ class Game:
         else:
             self.server_gui.reset_board()
 
+        if self.current_choice[0] != self.last_choice[0]:
+            self.show_opponent_picks()
         self.player_choose()
         self.pick = 0
         self.switch_player_turn()
         self.current_choice, self.last_choice = None, None
+
+    def show_opponent_picks(self):
+        if self.client_gui:
+            self.client_gui.turn_card(self.current_choice[1])
+            self.client_gui.turn_card(self.last_choice[1])
+            sleep(0.5)
+            self.client_gui.reset_board()
+        else:
+            self.server_gui.turn_card(self.current_choice[1])
+            self.server_gui.turn_card(self.last_choice[1])
+            sleep(0.5)
+            self.server_gui.reset_board()
 
     def client_start(self):
         self.current_choice, self.last_choice = self.network.receive()
@@ -312,17 +332,17 @@ class Game:
             if self.player1.points > self.player2.points:
                 self.client_gui.message('{} won the game with {} points'.format(self.player1.name, self.player1.points),
                                         'Winner!')
-            if self.player2.points > self.player1.points:
+            elif self.player2.points > self.player1.points:
                 self.client_gui.message('{} won the game with {} points'.format(self.player2.name, self.player2.points),
                                         'Winner!')
-            if self.player1.points == self.player2.points:
+            elif self.player1.points == self.player2.points:
                 self.client_gui.message('It\'s a draw', 'Draw!')
         else:
             if self.player1.points > self.player2.points:
                 self.server_gui.message('{} won the game with {} points'.format(self.player1.name, self.player1.points),
                                         'Winner!')
-            if self.player2.points > self.player1.points:
+            elif self.player2.points > self.player1.points:
                 self.server_gui.message('{} won the game with {} points'.format(self.player2.name, self.player2.points),
                                         'Winner!')
-            if self.player1.points == self.player2.points:
+            elif self.player1.points == self.player2.points:
                 self.server_gui.message('It\'s a draw', 'Draw!')
