@@ -11,7 +11,7 @@ import threading
 
 
 class GUI:
-    def __init__(self, cards_amount, game, server_client=''):
+    def __init__(self, cards_amount, game, img, server_client=''):
         self.player1 = None
         self.player2 = None
         self.network = False
@@ -25,16 +25,23 @@ class GUI:
         else:
             self.game.server_gui = self
 
+        self.img = img
         self.cards_amount = cards_amount
         self.root = Tk()
+        self.root.title('Memory Game')
+        self.root.geometry('400x450')
         self.f_information = Frame(self.root, borderwidth=4, relief="ridge", width=10, height=20)
         self.f_information.pack(side=TOP, anchor=N)
         self.f_game = Canvas(self.root)
         self.f_game.pack(side=TOP, anchor=N)
+
         self.l_player1, self.l_player2 = self.information_gui()
         self.make_game_gui()
 
     def information_gui(self):
+        # title = Label(self.f_information, image=self.img)
+        # title.pack(pady=(0, 25))
+
         player1 = Label(self.f_information, width=15, height=1, relief="ridge", bd=5)
         player1.pack(side=RIGHT, padx=10, pady=10)
 
@@ -51,11 +58,12 @@ class GUI:
 
     def make_board(self, max_column, row, column, card_number, amount_cards, num):
         var = 'card {}'.format(num)
+        font = ("Courier", 50)
         while True:
             random_int = randint(1, amount_cards / 2)
             if self.check_card_number(random_int):
                 self.cards[var] = [Label(self.f_game, text=' ', borderwidth=4, relief="groove", bg='moccasin',
-                                         width=4, height=3), random_int, card_number]
+                                         width=1, height=1, font=font), random_int, card_number]
                 card_number += 1
                 break
 
@@ -147,6 +155,7 @@ class GUI:
             self.l_player1.config(bd=5)
 
     def message(self, msg, title):
+        print('test')
         win = Toplevel()
         win.wm_geometry('250x100')
         win.title(title)
