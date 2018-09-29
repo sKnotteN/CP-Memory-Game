@@ -52,22 +52,21 @@ def send_message(message):
 
 # Vent på ein melding frå klienten. Decode meldingen med pickle og returner meldingen
 def receive():
+    data = None
     while True:
         try:
             data = connection.recv(1024)
         except UnboundLocalError:
             pass
         finally:
-            data = pickle.loads(data)
-            # data = data.decode('utf-8')
-            # print('\nServer received following message: {}'.format(data))
-            return data
+            if data:
+                data = pickle.loads(data)
+                # data = data.decode('utf-8')
+                # print('\nServer received following message: {}'.format(data))
+                return data
 
 
 # Stop tilkoplinga
 def close_connection():
-    connection.close()
-
-
-# set_info('127.0.0.1', 5000)
-# wait_for_connection()
+    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((s_ip[0], s_ip[1]))
+    s.close()

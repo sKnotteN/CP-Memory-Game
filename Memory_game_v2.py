@@ -12,6 +12,7 @@ import Memory_Game_Networking as Networking
 from tkinter import *
 from tkinter import messagebox
 import threading
+import time
 
 
 # Lag ein root vindauge for houvd menyen
@@ -38,8 +39,6 @@ class Mainmenu:
         self.f_user_input.pack(side=TOP)
         self.img = PhotoImage(file='Game_pic.png')
         self.game_title_frame, self.game_info_frame = self.information_frame()
-
-
 
         # Start og lag vindauget
         self.user_input_frame()
@@ -159,12 +158,15 @@ class NetworkMenu(Mainmenu):
         self.name, self.client_name, self.card_amount = '', '', ''
         self.name_entry, self.card_amount_entry = None, None
         self.network = None
+        self.b_play = None
         self.win = None
         self.t = None
         self.s_ip = ''
         self.player1, self.player2 = None, None
         self.name_input, self.ip_input = '', ''
         self.network_lobby = False
+        self.img = PhotoImage(file='Game_pic.png')
+        self.my_thread = None
 
         self.f_server_user_input = self.main_menu.f_user_input
         self.create_server_input_widgets(self.f_server_user_input)
@@ -184,6 +186,13 @@ class NetworkMenu(Mainmenu):
     # Når back blir trykt; clear framen og lag til mainmenu framen. Prøv og close sockets som er oppe.
     def back_b(self):
         if self.network_lobby:
+
+            try:
+                self.my_thread.raiseExc(ValueError)
+            except AttributeError:
+                print('except')
+                pass
+            print(self.my_thread)
             self.clear_frame(self.f_server_user_input)
             self.create_server_input_widgets(self.f_server_user_input)
             self.network_lobby = False
@@ -191,10 +200,10 @@ class NetworkMenu(Mainmenu):
             self.clear_frame(self.f_server_user_input)
             # self.f_server_user_input.place_forget()
             self.main_menu.user_input_frame()
-        try:
-            self.network.close
-        except AttributeError:
-            pass
+        # try:
+        #     self.network.close
+        # except AttributeError:
+        #     pass
 
     # Når find game blir trykt; Vindauge der klienten skriv inn namnet og server ip. Lager og ein connect knapp.
     def server_info(self):
@@ -202,11 +211,17 @@ class NetworkMenu(Mainmenu):
 
     # Når host game blir trykt; Vindauge for og velge mengden kort og namn. Lager og ein host og quit knapp.
     def waiting_for_client(self):
-        self.message2('Name:', 'Host a server', self.close_message_server_host, 'Start server', True)
+        self.message2('Name: ', 'Host a server', self.close_message_server_host, 'Start server', True)
 
     # Lager ein ny tråd som blir brukt til og lage serveren slik menyen ikkje frys
     def thread_networking_server(self):
-        threading.Thread(target=self.host_game).start()
+        self.my_thread = threading.Thread(target=self.host_game)
+        self.my_thread.start()
+
+
+        # self.my_thread = threading.Thread(target=self.host_game)
+        # self.my_thread.daemon = True
+        # self.my_thread.start()
 
     # def thread_networking_client(self):
     #     threading.Thread(target=self.find_server).start()
@@ -234,19 +249,26 @@ class NetworkMenu(Mainmenu):
         # Send det valgte namnet
         self.network.send('name: ' + str(self.name))
         # Vent på bekreftelse frå serveren
-        answer = self.network.receive()
-        if answer == 'No server found':
-            messagebox.showinfo('No server found', 'Was not able to find a server')
-        elif answer == 'Connected':
-            # Vent på informasjon frå serveren
-            answer2 = self.network.receive()
-            # Lagre den informasjonen som serveren sendte som er namn til player 1 og 2 og mendgen kort
-            self.card_amount, self.name, self.client_name = answer2[0], answer2[1], answer2[2]
+        answer = None
+        try:
+            answer = self.network.receive()
+        finally:
+            if answer:
+                if answer == 'No server found':
+                    messagebox.showinfo('No server found', 'Was not able to find a server')
+                elif answer == 'Connected':
+                    # Vent på informasjon frå serveren
+                    answer2 = self.network.receive()
+                    # Lagre den informasjonen som serveren sendte som er namn til player 1 og 2 og mendgen kort
+                    self.card_amount, self.name, self.client_name = answer2[0], answer2[1], answer2[2]
 
-            # Start ein ny tråd for og lage klienten sin versjon av spelet
-            threading.Thread(target=self.thread_client_start_game).start()
-            # Fjern så hovud menyen
-            menu_root.destroy()
+                    # Start ein ny tråd for og lage klienten sin versjon av spelet
+                    self.my_thread = threading.Thread(target=self.thread_client_start_game)
+                    self.my_thread.start()
+                    # Fjern så hovud menyen
+                    menu_root.destroy()
+            else:
+                messagebox.showinfo('No server found', 'Was not able to find a server')
 
     # Lager 2 forskjellige vindauger som skal kome opp når brukaren trykk på ein av knappane host game eller find game
     def message2(self, msg, title, button_event, button_text, host_server=False):
@@ -274,8 +296,8 @@ class NetworkMenu(Mainmenu):
 
             b_back = Button(self.f_server_user_input, text='Back', command=self.back_b)
             b_back.grid(column=0, row=2, pady=(20, 20))
-            b_play = Button(self.f_server_user_input, text=button_text, command=button_event)
-            b_play.grid(column=1, row=2)
+            self.b_play = Button(self.f_server_user_input, text=button_text, command=button_event)
+            self.b_play.grid(column=1, row=2)
 
             b_quit = Button(self.f_server_user_input, text='Quit Game', command=quit)
             b_quit.grid(columnspan=2, row=3, pady=(20, 20))
@@ -311,6 +333,9 @@ class NetworkMenu(Mainmenu):
         self.card_amount = self.card_amount_entry.get(ACTIVE)
         # self.win.destroy()
         # Start ein tråd og prøv og finne ein klient
+        self.b_play.destroy()
+        l_name = Label(self.f_server_user_input, text='Looking for a player ..')
+        l_name.grid(column=1, row=2)
         self.thread_networking_server()
 
     # Når ein trykker på find game i det nye vindauget: hent informasjon, fjern vindauget, prøv og kople til ein server.
@@ -366,6 +391,15 @@ class NetworkMenu(Mainmenu):
         self.game_gui.cards = cards
         self.game_gui.make_client_board()
         self.game.start_local_game()
+
+
+class SleepingThread(threading.Thread):
+    def __init__(self, sleep_length=None):
+        super().__init__()
+
+    def run(self):
+        while True:
+            time.sleep(1)
 
 
 # Lagre Mainmenu klassen i ein variabel for og initialisere klassa. Opne så vindauget

@@ -22,7 +22,7 @@ def set_info(server_ip, port):
     try:
         s.connect(s_ip)
         return 'Connected'
-    except ConnectionRefusedError:
+    except OSError:
         return 'No server found'
 
 
@@ -39,22 +39,19 @@ def send_message(message):
 
 # Vent på ein melding frå server. Decode meldingen med pickle og returner meldingen
 def receive():
+    data = None
     while True:
         try:
             data = s.recv(1024)
-        except UnboundLocalError:
-            pass
+        except OSError:
+            return None
         finally:
-            data = pickle.loads(data)
-            return data
+            if data:
+                data = pickle.loads(data)
+                return data
 
 
 # Stop tilkoplinga
-def close_connection(sock):
-    sock.close()
-
-
-# set_info('127.0.0.1', 5000)
-# sleep(1)
-# send_message('hey')
-# receive()
+def close_connection():
+    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((s_ip[0], s_ip[1]))
+    s.close()

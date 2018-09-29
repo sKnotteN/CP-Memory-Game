@@ -36,7 +36,8 @@ class GUI:
         self.f_game.pack(side=TOP, anchor=N)
 
         self.l_player1, self.l_player2 = self.information_gui()
-        self.make_game_gui()
+        if not self.game.client_gui:
+            self.make_game_gui()
 
     def information_gui(self):
         # title = Label(self.f_information, image=self.img)
@@ -81,8 +82,10 @@ class GUI:
     def make_client_board(self):
         x, y = self.cards_amount.split('x')
         row, column, max_column = 0, 0, int(y) - 1
+        font = ("Courier", 50)
         for key, card in self.cards.items():
-            label = Label(self.f_game, text=' ', borderwidth=4, relief="groove", bg='moccasin', width=4, height=3)
+            label = Label(self.f_game, text=' ', borderwidth=4, relief="groove", bg='moccasin', width=1, height=1,
+                          font=font)
             card[0] = label
             card[0].grid(row=row, column=column, pady=2)
             card[0].bind("<Button-1>", self.card_click)
@@ -154,13 +157,15 @@ class GUI:
             self.l_player2.config(bd=2)
             self.l_player1.config(bd=5)
 
+    def clear_frame(self, frame):
+        for widget in frame.winfo_children():
+            widget.destroy()
+
     def message(self, msg, title):
-        print('test')
-        win = Toplevel()
-        win.wm_geometry('250x100')
-        win.title(title)
-        Label(win, text=msg).pack(pady=8)
-        Button(win, text='Quit', command=quit).pack(side=BOTTOM, pady=14)
+        self.clear_frame(self.f_game)
+        self.root.title('Game won!')
+        Label(self.f_game, text=msg).pack(pady=8)
+        Button(self.f_game, text='Quit', command=quit).pack(side=BOTTOM, pady=14)
 
 
 class Player:
