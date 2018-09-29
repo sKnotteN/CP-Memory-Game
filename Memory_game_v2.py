@@ -200,12 +200,7 @@ class NetworkMenu(Mainmenu):
             self.network_lobby = False
         else:
             self.clear_frame(self.f_server_user_input)
-            # self.f_server_user_input.place_forget()
             self.main_menu.user_input_frame()
-        # try:
-        #     self.network.close
-        # except AttributeError:
-        #     pass
 
     # Når find game blir trykt; Vindauge der klienten skriv inn namnet og server ip. Lager og ein connect knapp.
     def server_info(self):
@@ -219,14 +214,6 @@ class NetworkMenu(Mainmenu):
     def thread_networking_server(self):
         self.my_thread = threading.Thread(target=self.host_game)
         self.my_thread.start()
-
-
-        # self.my_thread = threading.Thread(target=self.host_game)
-        # self.my_thread.daemon = True
-        # self.my_thread.start()
-
-    # def thread_networking_client(self):
-    #     threading.Thread(target=self.find_server).start()
 
     # Setter opp ein socket og venter på at nokon kopler til.
     def host_game(self):
@@ -345,8 +332,6 @@ class NetworkMenu(Mainmenu):
     def close_message(self):
         self.name = self.name_input.get()
         self.s_ip = self.ip_input.get()
-        # self.win.destroy()
-        # self.thread_networking_client()
         # Prøv og kople til ein server
         self.find_server()
 
@@ -394,15 +379,6 @@ class NetworkMenu(Mainmenu):
         self.game_gui.cards = cards
         self.game_gui.make_client_board()
         self.game.start_local_game()
-
-
-class SleepingThread(threading.Thread):
-    def __init__(self, sleep_length=None):
-        super().__init__()
-
-    def run(self):
-        while True:
-            time.sleep(1)
 
 
 # Lagre Mainmenu klassen i ein variabel for og initialisere klassa. Opne så vindauget

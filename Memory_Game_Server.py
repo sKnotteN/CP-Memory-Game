@@ -38,6 +38,7 @@ def wait_for_connection():
         except Exception:
             return 'Interrupted', None, None
 
+
 # Send ein beskjed til klienten. Bruk pickle til og enkelt sende variablar
 def send_message(message):
     msg = pickle.dumps(message)
@@ -46,7 +47,7 @@ def send_message(message):
             connection.sendall(msg)
             break
         except OSError:
-            print('No server to send message to')
+            break
 
 
 # Vent på ein melding frå klienten. Decode meldingen med pickle og returner meldingen
@@ -55,17 +56,14 @@ def receive():
     while True:
         try:
             data = connection.recv(1024)
-        except UnboundLocalError:
-            pass
+        except OSError:
+            return None
         finally:
             if data:
                 data = pickle.loads(data)
-                # data = data.decode('utf-8')
-                # print('\nServer received following message: {}'.format(data))
                 return data
 
 
 # Stop tilkoplinga
 def close_connection():
-    # socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((s_ip[0], s_ip[1]))
     s.close()

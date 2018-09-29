@@ -53,5 +53,4 @@ def receive():
 
 # Stop tilkoplinga
 def close_connection():
-    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((s_ip[0], s_ip[1]))
     s.close()
