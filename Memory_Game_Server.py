@@ -34,11 +34,9 @@ def wait_for_connection():
         try:
             connection, client_ip = s.accept()
             print('Connected to {}'.format(client_ip))
-        except KeyboardInterrupt:
-            return
-        finally:
             return 'Connected', connection, client_ip
-
+        except Exception:
+            return 'Interrupted', None, None
 
 # Send ein beskjed til klienten. Bruk pickle til og enkelt sende variablar
 def send_message(message):
@@ -69,5 +67,5 @@ def receive():
 
 # Stop tilkoplinga
 def close_connection():
-    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((s_ip[0], s_ip[1]))
+    # socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((s_ip[0], s_ip[1]))
     s.close()

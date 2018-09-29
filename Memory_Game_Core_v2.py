@@ -19,6 +19,7 @@ class GUI:
         self.chosen_card = None
         self.cards = {}
         self.game = game
+        self.cards_disabled = False
 
         if server_client == 'client':
             self.game.client_gui = self
@@ -40,8 +41,8 @@ class GUI:
             self.make_game_gui()
 
     def information_gui(self):
-        # title = Label(self.f_information, image=self.img)
-        # title.pack(pady=(0, 25))
+        #title = Label(self.f_information, image=self.img)
+        #title.pack(pady=(0, 25))
 
         player1 = Label(self.f_information, width=15, height=1, relief="ridge", bd=5)
         player1.pack(side=RIGHT, padx=10, pady=10)
@@ -106,11 +107,9 @@ class GUI:
         return True
 
     def reset_board(self):
-        self.disable_cards()
         sleep(1)
         for card, x, y in self.cards.values():
             card.config(text=' ', bg='moccasin')
-        self.disable_cards(False)
 
     def disable_cards(self, disable=True):
         if disable:
@@ -140,7 +139,12 @@ class GUI:
         del self.cards[delete_keys[1]]
 
     def card_click(self, event):
+        if self.cards_disabled:
+            return
+        self.cards_disabled = True
         self.game.card_clicked(event, self.cards)
+        self.cards_disabled = False
+
 
     def turn_card(self, num):
         for key, card in self.cards.items():
@@ -307,13 +311,27 @@ class Game:
 
     def receive_update(self):
         if self.client_gui:
+            if self.client_gui.cards == {}:
+                self.check_win()
+                return
             self.client_gui.reset_board()
         else:
+            if self.server_gui.cards == {}:
+                self.check_win()
+                return
             self.server_gui.reset_board()
 
         if self.current_choice[0] != self.last_choice[0]:
             self.show_opponent_picks()
         self.player_choose()
+
+        if self.client_gui and self.client_gui.cards == {}:
+            self.check_win()
+            return
+        if self.server_gui and self.server_gui.cards == {}:
+            self.check_win()
+            return
+
         self.pick = 0
         self.switch_player_turn()
         self.current_choice, self.last_choice = None, None
@@ -343,6 +361,7 @@ class Game:
 
     def check_win(self):
         if self.client_gui:
+            print('print check win')
             if self.player1.points > self.player2.points:
                 self.client_gui.message('{} won the game with {} points'.format(self.player1.name, self.player1.points),
                                         'Winner!')
@@ -352,6 +371,7 @@ class Game:
             elif self.player1.points == self.player2.points:
                 self.client_gui.message('It\'s a draw', 'Draw!')
         else:
+            print('print check win')
             if self.player1.points > self.player2.points:
                 self.server_gui.message('{} won the game with {} points'.format(self.player1.name, self.player1.points),
                                         'Winner!')

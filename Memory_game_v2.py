@@ -189,7 +189,8 @@ class NetworkMenu(Mainmenu):
         if self.network_lobby:
 
             try:
-                self.my_thread.raiseExc(ValueError)
+                self.network.close()
+                self.my_thread.join()
             except AttributeError:
                 print('except')
                 pass
