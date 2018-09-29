@@ -16,10 +16,11 @@ client_ip = None
 
 
 # Lagrer informasjonen som skal bli brukt i variabler. Lag ein TCP IPv4 socket
-def set_info(server_ip, port):
+def set_info(port):
     global s
     global s_ip
-    s_ip = (server_ip, port)
+    ip = socket.gethostbyname(socket.gethostname())
+    s_ip = (ip, port)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(s_ip)
 

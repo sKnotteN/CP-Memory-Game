@@ -16,10 +16,10 @@ class Network:
 
 # Arv Network klassa og lag ein klasse for serveren
 class Server(Network):
-    def __init__(self, server_ip, port):
+    def __init__(self, port):
         # Arv init variablane frå parent
-        super().__init__(server_ip, port)
-
+        # super().__init__(server_ip, port)/
+        self.port = port
         # Legg til klient ip og connection variabel som skal bli sett seinare
         self.c_ip = None
         self.connection = None
@@ -29,7 +29,7 @@ class Server(Network):
 
     # Lagre informasjonen og vent på tilkopling fra klienten, returner så svaret som kjem frå Memory_Game_Server
     def look(self):
-        self.server.set_info(self.server_ip, self.port)
+        self.server.set_info(self.port)
         connected, self.c_ip, self.connection = self.server.wait_for_connection()
         return connected
 

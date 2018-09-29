@@ -13,6 +13,7 @@ from tkinter import *
 from tkinter import messagebox
 import threading
 import time
+import socket
 
 
 # Lag ein root vindauge for houvd menyen
@@ -229,7 +230,7 @@ class NetworkMenu(Mainmenu):
     # Setter opp ein socket og venter på at nokon kopler til.
     def host_game(self):
         self.player1, self.player2 = None, None
-        self.network = Networking.Server('127.0.0.1', 5000)
+        self.network = Networking.Server(5000)
         if self.network.look() == 'Connected':
             # Når nåken kopler til sjekk kva namnet til klienten er
             data = self.network.receive()
@@ -331,10 +332,11 @@ class NetworkMenu(Mainmenu):
     def close_message_server_host(self):
         self.name = self.name_input.get()
         self.card_amount = self.card_amount_entry.get(ACTIVE)
-        # self.win.destroy()
         # Start ein tråd og prøv og finne ein klient
         self.b_play.destroy()
-        l_name = Label(self.f_server_user_input, text='Looking for a player ..')
+        # Finn ip adressa til serveren
+        ip = socket.gethostbyname(socket.gethostname())
+        l_name = Label(self.f_server_user_input, text='Looking for a player ..\n\n Your IP: %s' % ip)
         l_name.grid(column=1, row=2)
         self.thread_networking_server()
 
